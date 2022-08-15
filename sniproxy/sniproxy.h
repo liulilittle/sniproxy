@@ -21,8 +21,7 @@ class sniproxy final : public std::enable_shared_from_this<sniproxy> {
 
 public:
     inline sniproxy(const std::shared_ptr<server>& server, const std::shared_ptr<boost::asio::io_context>& context, const std::shared_ptr<boost::asio::ip::tcp::socket>& socket) noexcept
-        : handshaked_(false)
-        , owner_(server)
+        : owner_(server)
         , hosting_(owner_->GetHosting())
         , configuration_(owner_->GetConfiguration())
         , context_(context)
@@ -44,7 +43,6 @@ public:
 
 public:
     inline void                                                 close() noexcept {
-        boost::system::error_code ec_;
         std::shared_ptr<boost::asio::ip::tcp::socket> local_socket = local_socket_;
         if (local_socket) {
             server::closesocket(*local_socket);
@@ -56,11 +54,7 @@ public:
         }
         catch (std::exception&) {}
 
-        std::shared_ptr<boost::asio::deadline_timer> timeout = std::move(timeout_);
-        if (timeout) {
-            timeout_.reset();
-            timeout->cancel(ec_);
-        }
+        clear_timeout();
         last_ = hosting_->CurrentMillisec();
     }
     inline bool                                                 handshake() noexcept {
@@ -80,8 +74,7 @@ public:
 
         boost::asio::spawn(*context_,
             [self, this](const boost::asio::yield_context& y) noexcept {
-                handshaked_ = do_handshake(y);
-                if (!handshaked_) {
+                if (!do_handshake(y)) {
                     close();
                 }
             });
@@ -89,6 +82,14 @@ public:
     }
 
 private:
+    inline void                                                 clear_timeout() {
+        boost::system::error_code ec_;
+        std::shared_ptr<boost::asio::deadline_timer> timeout = std::move(timeout_);
+        if (timeout) {
+            timeout_.reset();
+            timeout->cancel(ec_);
+        }
+    }
     inline UInt16                                               fetch_uint16(Byte*& data) noexcept {
         int h_ = (Byte)*data++;
         int l_ = (Byte)*data++;
@@ -552,11 +553,12 @@ private:
         if (!network::asio::async_write(remote_socket_, boost::asio::buffer(buff_.get(), messages_.GetPosition()), y)) {
             return false;
         }
+
+        clear_timeout();
         return local_to_remote() && remote_to_local();
     }
 
 private:
-    bool                                                        handshaked_;
     std::shared_ptr<server>                                     owner_;
     std::shared_ptr<Hosting>                                    hosting_;
     std::shared_ptr<server_configuration>                       configuration_;

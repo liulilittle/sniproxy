@@ -140,14 +140,9 @@ bool server::AcceptSocket(ACCEPT_SOCKET_ORIGIN origin) noexcept {
     acceptor->async_accept(*socket_,
         [origin, server_, this, context_, socket_](boost::system::error_code ec_) noexcept {
             bool success = false;
-            do {
-                if (ec_ == boost::system::errc::connection_aborted) { /* ECONNABORTED */
-                    break;
-                }
-                elif(ec_) {
-                    assert(false);
-                    abort();
-                    return;
+            do { /* boost::system::errc::connection_aborted */
+                if (ec_) { /* ECONNABORTED */
+                    break; 
                 }
 
                 int handle_ = socket_->native_handle();
