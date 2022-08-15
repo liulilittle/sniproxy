@@ -320,7 +320,7 @@ private:
         }
 
         std::string hostname_ = fetch_sniaddr(tls_payload);
-        IPEndPoint reverse_server_ = Ipep::GetEndPoint(configuration_->reverse_proxy.http_ssl);
+        IPEndPoint reverse_server_ = Ipep::GetEndPoint(configuration_->reverse_proxy.http_ssl, false);
         return do_connect_and_forward_to_host(y, hostname_, 443, reverse_server_, messages_);
     }
     inline bool                                                 do_httpd_handshake(const boost::asio::yield_context& y, MemoryStream& messages_) noexcept {
@@ -334,7 +334,7 @@ private:
             return false;
         }
 
-        IPEndPoint reverse_server_ = Ipep::GetEndPoint(configuration_->reverse_proxy.http);
+        IPEndPoint reverse_server_ = Ipep::GetEndPoint(configuration_->reverse_proxy.http, false);
         return do_connect_and_forward_to_host(y, hostname_, port_, reverse_server_, messages_);
     }
     inline bool                                                 do_httpd_handshake_host_trim(MemoryStream& messages_, std::string& host, int& port) noexcept {
@@ -498,7 +498,7 @@ private:
                 return false;
             }
 
-            if (reverse_server_.Port <= IPEndPoint::MinPort || reverse_server_.Port > IPEndPoint::MinPort) {
+            if (reverse_server_.Port <= IPEndPoint::MinPort || reverse_server_.Port > IPEndPoint::MaxPort) {
                 return false;
             }
             remoteEP_ = IPEndPoint::ToEndPoint<boost::asio::ip::tcp>(reverse_server_);
