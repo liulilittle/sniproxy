@@ -139,6 +139,13 @@ bool server::AcceptSocket(ACCEPT_SOCKET_ORIGIN origin) noexcept {
     std::shared_ptr<boost::asio::ip::tcp::socket> socket_ = make_shared_object<boost::asio::ip::tcp::socket>(*context_);
     acceptor->async_accept(*socket_,
         [origin, server_, this, context_, socket_](boost::system::error_code ec_) noexcept {
+            // The operation has been canceled abort the server.
+            if (ec_ == boost::system::errc::operation_canceled) {
+                assert(ec_ == boost::system::errc::success);
+                abort();
+                return;
+            }
+
             bool success = false;
             do { /* boost::system::errc::connection_aborted */
                 if (ec_) { /* ECONNABORTED */

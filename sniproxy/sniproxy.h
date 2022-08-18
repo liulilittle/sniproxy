@@ -58,13 +58,15 @@ public:
         last_ = hosting_->CurrentMillisec();
     }
     inline bool                                                 handshake() noexcept {
-        std::shared_ptr<boost::asio::ip::tcp::socket> socket = local_socket_;
+        const std::shared_ptr<boost::asio::ip::tcp::socket> socket = local_socket_;
         if (!socket || !context_ || !configuration_) {
             return false;
         }
 
-        std::shared_ptr<sniproxy> self = shared_from_this();
-        timeout_ = hosting_->Timeout(context_,
+        const std::shared_ptr<Hosting>& hosting = hosting_;
+        const std::shared_ptr<sniproxy> self = shared_from_this();
+
+        timeout_ = hosting->Timeout(context_,
             [this, self]() noexcept {
                 close();
             }, (uint64_t)configuration_->connect.timeout * 1000);
@@ -74,8 +76,12 @@ public:
 
         boost::asio::spawn(*context_,
             [self, this](const boost::asio::yield_context& y) noexcept {
-                if (!do_handshake(y)) {
+                bool success_ = do_handshake(y);
+                if (!success_) {
                     close();
+                }
+                else {
+                    clear_timeout();
                 }
             });
         return true;
