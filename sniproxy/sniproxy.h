@@ -97,9 +97,14 @@ private:
         }
     }
     inline UInt16                                               fetch_uint16(Byte*& data) noexcept {
-        int h_ = (Byte)*data++;
-        int l_ = (Byte)*data++;
-        return (h_ << 8) | (l_);
+        int r_ = data[0] << 8 | data[1];
+        data += 2;
+        return r_;
+    }
+    inline int                                                  fetch_length(Byte*& data) noexcept {
+        int r_ = data[0] << 16 | data[1] << 8 | data[2];
+        data += 3;
+        return r_;
     }
     inline std::string                                          fetch_sniaddr(size_t tls_payload) noexcept {
         Byte* data = (Byte*)local_socket_buf_;
@@ -107,9 +112,7 @@ private:
             return "";
         }
 
-        int Length = std::max<int>(0, data[0] << 16 | data[1] << 8 | data[2]);
-        data += 3;
-
+        int Length = std::max<int>(0, fetch_length(data));
         if ((Length + 4) != tls_payload) {
             return "";
         }
