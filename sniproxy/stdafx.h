@@ -348,17 +348,23 @@ inline constexpr T&&                                                        forw
     return std::forward<T>(constantof(v));
 }
 
-inline void*                                                                Malloc(size_t size_) noexcept {
-    if (!size_) {
+template <typename T>
+constexpr inline T                                                          Malign(const T size, int alignment) noexcept {
+    return (T)(((uint64_t)size + alignment - 1) & ~(alignment - 1));
+}
+
+inline void*                                                                Malloc(size_t size) noexcept {
+    if (!size) {
         return NULL;
     }
 
+    size = Malign(size, 16);
 #ifdef JEMALLOC
-    return (void*)::je_malloc(size_);
+    return (void*)::je_malloc(size);
 #else
-    return (void*)::malloc(size_);
+    return (void*)::malloc(size);
 #endif
-}
+    }
 
 inline void                                                                 Mfree(const void* p) noexcept {
     if (p) {
