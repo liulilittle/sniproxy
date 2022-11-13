@@ -364,7 +364,7 @@ inline void*                                                                Mall
 #else
     return (void*)::malloc(size);
 #endif
-    }
+}
 
 inline void                                                                 Mfree(const void* p) noexcept {
     if (p) {
