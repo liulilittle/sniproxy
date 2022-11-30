@@ -417,7 +417,7 @@ private:
             }
 
             if (url_or_path[0] != '/') {
-                std::string url = ToLower(url);
+                std::string url = ToLower(url_or_path);
                 do {
                     std::size_t leftIndex = url.find("://");
                     if (leftIndex == std::string::npos) {

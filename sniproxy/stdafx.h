@@ -255,7 +255,7 @@ template<typename _Ty>
 inline _Ty                                                                  ToUpper(const _Ty& s) noexcept {
     _Ty r = s;
     if (!r.empty()) {
-        std::transform(s.begin(), s.end(), r.begin(), toupper);
+        std::transform(r.begin(), r.end(), r.begin(), toupper);
     }
     return r;
 }
@@ -264,7 +264,7 @@ template<typename _Ty>
 inline _Ty                                                                  ToLower(const _Ty& s) noexcept {
     _Ty r = s;
     if (!r.empty()) {
-        std::transform(s.begin(), s.end(), r.begin(), tolower);
+        std::transform(r.begin(), r.end(), r.begin(), tolower);
     }
     return r;
 }
